@@ -5,7 +5,7 @@
 #include <linux/kallsyms.h> /* kallsyms_lookup_name */
 #include <linux/dirent.h>   /* struct linux_dirent64 */
 #include <linux/syscalls.h> /* __NR_getdents64 */
-#include <linux/uaccess.h>  /* copy_from_user, copy_to_user, strncpy_from_user */
+#include <linux/uaccess.h>  /* copy_from_user, copy_to_user */
 #include <linux/string.h>   /* strcmp */
 
 /* Macros */
