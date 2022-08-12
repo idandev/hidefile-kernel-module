@@ -1,0 +1,14 @@
+.vscode/
+.vscode-ctags
+
+
+*.cmd
+*.o
+*.ko
+*.mod*
+Module.symvers
+modules.order
+
+
+# The file that the module hides
+hideme
