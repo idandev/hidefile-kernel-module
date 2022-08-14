@@ -117,7 +117,7 @@ int init_driver(void)
 {
     int err = 0;
 
-    err = register_chrdev_region(MKDEV(HIDEFILE_MAJOR, 0), MAX_HIDEFILE_MINOR, "hidefile");
+    err = register_chrdev_region(MKDEV(HIDEFILE_MAJOR, 0), MAX_HIDEFILE_MINOR, "hidefile_driver");
 
     if (err < 0)
     {
