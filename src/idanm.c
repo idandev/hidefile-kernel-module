@@ -268,9 +268,12 @@ static void __exit lkm_example_exit(void)
         return;
     }
 
-    zero_wp();
-    sys_call_table[__NR_getdents64] = (sys_call_ptr_t)orig_getdents64;
-    one_wp();
+    if (orig_getdents64)
+    {
+        zero_wp();
+        sys_call_table[__NR_getdents64] = (sys_call_ptr_t)orig_getdents64;
+        one_wp();
+    }
 
     pr_info("Idan's kernel module successfully unloaded!");
 }
