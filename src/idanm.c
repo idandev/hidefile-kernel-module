@@ -13,7 +13,7 @@
 
 /* Module information */
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Idan");
+MODULE_AUTHOR("Idan Carlebach <idanefrat@gmail.com>");
 MODULE_DESCRIPTION("A simple file hider.");
 MODULE_VERSION("0.01");
 
