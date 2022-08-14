@@ -229,7 +229,14 @@ static int __init lkm_example_init(void)
     if (!sys_call_table)
     {
         pr_err("Idan's kernel module didn't find the sys call table");
-        EXIT_CODE = 1;
+        EXIT_CODE = -EFAULT;
+        goto cleanup;
+    }
+
+    EXIT_CODE = init_driver();
+    if (EXIT_CODE != 0)
+    {
+        pr_err("Coudln't initialize the driver");
         goto cleanup;
     }
 
@@ -237,12 +244,6 @@ static int __init lkm_example_init(void)
     zero_wp();
     sys_call_table[__NR_getdents64] = (sys_call_ptr_t)modified_getdents64;
     one_wp();
-
-    if (init_driver() != 0)
-    {
-        pr_err("Coudln't initialize the driver");
-        EXIT_CODE = 2;
-    }
 
     pr_info("Idan's kernel successfully overridden the getdents64 function!!");
 
