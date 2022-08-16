@@ -6,6 +6,7 @@
 
 /* Global variables */
 struct hidefile_device_data *device = NULL;
+static struct class *hidefile_class = NULL;
 
 static int hidefile_open(struct inode *inode, struct file *file)
 {
@@ -116,6 +117,7 @@ const struct file_operations hidefile_ops = {
 int init_driver(void)
 {
     int err = 0;
+    void *device_ptr = NULL;
 
     err = register_chrdev_region(MKDEV(HIDEFILE_MAJOR, 0), MAX_HIDEFILE_MINOR, "hidefile_driver");
 
@@ -144,11 +146,28 @@ int init_driver(void)
         return err;
     }
 
+    hidefile_class = class_create(THIS_MODULE, "hidefile_class");
+
+    device_ptr = device_create(hidefile_class, NULL, MKDEV(HIDEFILE_MAJOR, 0), NULL, "hidefile");
+    if (IS_ERR(device_ptr))
+    {
+        pr_err("Idan's module failed to create a device");
+        class_unregister(hidefile_class);
+        class_destroy(hidefile_class);
+        cdev_del(&device->cdev);
+        kfree(device);
+        unregister_chrdev_region(MKDEV(HIDEFILE_MAJOR, 0), MAX_HIDEFILE_MINOR);
+        return -ENOMEM;
+    }
+
     return 0;
 }
 
 void cleanup_driver(void)
 {
+    device_destroy(hidefile_class, MKDEV(HIDEFILE_MAJOR, 0));
+    class_unregister(hidefile_class);
+    class_destroy(hidefile_class);
     cdev_del(&device->cdev);
 
     kfree(device);

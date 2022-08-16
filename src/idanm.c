@@ -268,6 +268,8 @@ static void __exit lkm_example_exit(void)
         return;
     }
 
+    cleanup_driver();
+
     if (orig_getdents64)
     {
         zero_wp();
