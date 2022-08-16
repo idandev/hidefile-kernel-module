@@ -76,13 +76,13 @@ static long hidefile_ioctl(struct file *file, unsigned int cmd, unsigned long ar
             pr_err("Idan's module failed to allocate filename");
             return -ENOMEM;
         }
-        if (strncpy_from_user(filename, (char __user *)arg, strnlen_user((char __user *)arg, MAX_DIRENT_NAME_LEN)) != 0)
+        if (strncpy_from_user(filename, (char __user *)arg, strnlen_user((char __user *)arg, MAX_DIRENT_NAME_LEN)) <= 0)
         {
             pr_err("Idan's module failed to copy from user");
             kfree(filename);
             return -EFAULT;
         }
-        remove_file_from_list(filename);
+        add_file_to_hide(filename);
         break;
     case HIDEFILE_OP_REMOVE:
         filename = (char *)kmalloc(MAX_DIRENT_NAME_LEN, GFP_KERNEL);
@@ -91,13 +91,13 @@ static long hidefile_ioctl(struct file *file, unsigned int cmd, unsigned long ar
             pr_err("Idan's module failed to allocate filename");
             return -ENOMEM;
         }
-        if (strncpy_from_user(filename, (char __user *)arg, strnlen_user((char __user *)arg, MAX_DIRENT_NAME_LEN)) != 0)
+        if (strncpy_from_user(filename, (char __user *)arg, strnlen_user((char __user *)arg, MAX_DIRENT_NAME_LEN)) <= 0)
         {
             pr_err("Idan's module failed to copy from user");
             kfree(filename);
             return -EFAULT;
         }
-        add_file_to_hide(filename);
+        remove_file_from_list(filename);
         break;
     default:
         return -EINVAL;
