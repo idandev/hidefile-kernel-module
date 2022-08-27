@@ -1,8 +1,8 @@
 #include <linux/kernel.h>  /* printk */
-#include <linux/uaccess.h> /* strncpy_from_user */
+#include <linux/uaccess.h> /* strncpy_from_user, strnlen_user */
 #include <linux/slab.h>    /* kmalloc, kfree */
-#include "driver.h"
-#include "idanm.h"
+#include "driver.h"        /* HIDEFILE_MAJOR, MAX_HIDEFILE_MINOR, hidefile_operation, hidefile_device_data */
+#include "idanm.h"         /* add_file_to_hide, remove_file_from_list, MAX_DIRENT_NAME_LEN */
 
 /* Global variables */
 struct hidefile_device_data *device = NULL;
