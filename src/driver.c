@@ -10,52 +10,22 @@ static struct class *hidefile_class = NULL;
 
 static int hidefile_open(struct inode *inode, struct file *file)
 {
-    struct hidefile_device_data *d_data;
-    pr_info("Idan's module opened the file");
-
-    d_data = container_of(inode->i_cdev, struct hidefile_device_data, cdev);
-
-    file->private_data = d_data;
-
-    // TODO: impleent open
-
     return 0;
 }
 
 static ssize_t hidefile_read(struct file *file, char __user *buf, size_t count, loff_t *ppos)
 {
-    struct hidefile_device_data *d_data;
-    pr_info("Idan's module read the file");
-
-    d_data = (struct hidefile_device_data *)file->private_data;
-
-    // TODO: implement read
-
     return 0;
 }
 
 static ssize_t hidefile_write(struct file *file, const char __user *buf, size_t count, loff_t *ppos)
 {
-    struct hidefile_device_data *d_data;
-    pr_info("Idan's module wrote to the file");
-
-    d_data = (struct hidefile_device_data *)file->private_data;
-
-    // TODO: implement write
-
     return 0;
 }
 
 static int hidefile_release(struct inode *inode, struct file *file)
 {
-    struct hidefile_device_data *d_data;
-    pr_info("Idan's module closed the file");
-
-    d_data = (struct hidefile_device_data *)file->private_data;
     file->private_data = NULL;
-
-    // TODO: implement release
-
     return 0;
 }
 
