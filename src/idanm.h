@@ -1,8 +1,6 @@
 #ifndef __IDANM__IDANM_H__
 #define __IDANM__IDANM_H__
 
-#include <linux/uaccess.h> /* asmlinkage */
-
 /* Macros */
 #define MAX_DIRENT_NAME_LEN 256
 
